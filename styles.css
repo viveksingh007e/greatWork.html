@@ -1,50 +1,263 @@
+:root {
+    --bg-deep: #090f1b;
+    --bg-mid: #101a2a;
+    --panel: rgba(15, 23, 38, 0.72);
+    --panel-border: rgba(255, 255, 255, 0.12);
+    --text-main: #edf3ff;
+    --text-soft: #a8b7cf;
+    --accent: #4dd7c4;
+    --accent-warm: #ffcf6b;
+    --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-    background: #1a1a2e;
-    color: #e0e0e0;
-    text-align: center;
-    padding: 60px 20px;
-    font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
     min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 40px 18px;
+    color: var(--text-main);
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    background:
+        radial-gradient(circle at 10% 15%, rgba(77, 215, 196, 0.17), transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(255, 207, 107, 0.16), transparent 45%),
+        linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 55%, #0a1424 100%);
+    overflow-x: hidden;
+}
+
+.bg-orb {
+    position: fixed;
+    width: 340px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    filter: blur(34px);
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 11s ease-in-out infinite alternate;
+}
+
+.orb-1 {
+    top: -90px;
+    right: -90px;
+    background: radial-gradient(circle, rgba(77, 215, 196, 0.65), transparent 65%);
+}
+
+.orb-2 {
+    bottom: -130px;
+    left: -70px;
+    background: radial-gradient(circle, rgba(82, 147, 255, 0.5), transparent 68%);
+    animation-duration: 13s;
+}
+
+.app-shell {
+    position: relative;
+    z-index: 1;
+    width: min(740px, 100%);
+    padding: 30px 24px 26px;
+    border-radius: 28px;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+    animation: rise 0.75s ease;
+}
+
+.hero {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.eyebrow {
+    margin: 0;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+h1 {
+    margin: 8px 0 10px;
+    font-size: clamp(28px, 5vw, 44px);
+    line-height: 1.1;
+    font-weight: 800;
+    text-shadow: 0 5px 22px rgba(0, 0, 0, 0.45);
+}
+
+.subtitle {
+    margin: 0 auto;
+    max-width: 45ch;
+    color: var(--text-soft);
+    font-size: clamp(14px, 2.4vw, 17px);
 }
 
 .button-grid {
-    display: inline-grid;
-    grid-template-columns: repeat(2, 130px);
-    gap: 24px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    gap: 16px;
 }
 
 .exercise-btn {
-    height: 130px;
-    width: 130px;
-    background: linear-gradient(145deg, #2c4836, #2c4836);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 28px;
+    min-height: 146px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 22px;
     cursor: pointer;
-    color: white;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.5), -2px -2px 8px rgba(255, 255, 255, 0.04);
+    color: var(--text-main);
+    background:
+        linear-gradient(150deg, rgba(77, 215, 196, 0.16), rgba(82, 147, 255, 0.08) 55%, rgba(255, 207, 107, 0.12)),
+        rgba(18, 30, 50, 0.9);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 10px 24px rgba(0, 0, 0, 0.35);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 8px;
 }
 
 .exercise-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(77, 215, 196, 0.8);
+    box-shadow: 0 16px 28px rgba(0, 0, 0, 0.42), 0 0 22px rgba(77, 215, 196, 0.23);
 }
 
 .exercise-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    transform: translateY(-1px);
+}
+
+.exercise-btn:focus-visible {
+    outline: 3px solid rgba(77, 215, 196, 0.75);
+    outline-offset: 2px;
 }
 
 .exercise-btn .icon {
-    font-size: 54px;
-    display: block;
-    margin-bottom: 4px;
+    font-size: 46px;
+    line-height: 1;
 }
 
 .exercise-btn .label {
-    color: #ebc84c;
-    font-weight: bold;
+    color: var(--accent-warm);
+    font-weight: 700;
     font-size: 14px;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.02em;
+}
+
+.micro-note {
+    position: relative;
+    z-index: 1;
+    margin: 14px 0 0;
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes drift {
+    from {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    to {
+        transform: translate3d(10px, 20px, 0) scale(1.08);
+    }
+}
+
+@media (max-width: 560px) {
+    body {
+        padding: max(14px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
+        place-items: stretch;
+    }
+
+    .bg-orb {
+        width: 240px;
+        opacity: 0.28;
+        filter: blur(26px);
+    }
+
+    .app-shell {
+        width: 100%;
+        margin-top: 10px;
+        padding: 20px 14px 16px;
+        border-radius: 20px;
+        border-color: rgba(255, 255, 255, 0.18);
+        background: linear-gradient(165deg, rgba(14, 23, 37, 0.86), rgba(12, 19, 33, 0.78));
+    }
+
+    .hero {
+        margin-bottom: 16px;
+    }
+
+    .eyebrow {
+        font-size: 10px;
+        letter-spacing: 0.14em;
+    }
+
+    h1 {
+        margin: 6px 0 8px;
+        font-size: clamp(25px, 8vw, 34px);
+    }
+
+    .subtitle {
+        font-size: 13px;
+        max-width: 34ch;
+    }
+
+    .button-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .exercise-btn {
+        min-height: 0;
+        aspect-ratio: 1;
+        border-radius: 18px;
+        gap: 6px;
+        padding: 8px 6px;
+        background:
+            linear-gradient(160deg, rgba(77, 215, 196, 0.18), rgba(82, 147, 255, 0.09) 60%, rgba(255, 207, 107, 0.14)),
+            rgba(16, 27, 44, 0.95);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.11), 0 8px 18px rgba(0, 0, 0, 0.32);
+    }
+
+    .exercise-btn .icon {
+        font-size: clamp(30px, 8vw, 38px);
+    }
+
+    .exercise-btn .label {
+        font-size: 12px;
+        line-height: 1.25;
+        text-wrap: balance;
+    }
+
+    .micro-note {
+        margin: 11px 0 0;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 360px) {
+    .button-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .exercise-btn {
+        aspect-ratio: auto;
+        min-height: 112px;
+    }
 }
