@@ -98,35 +98,53 @@ h1 {
 
 .button-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    justify-items: center;
 }
 
 .exercise-btn {
-    min-height: 146px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 22px;
+    width: clamp(130px, 19vw, 170px);
+    aspect-ratio: 1;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 50%;
     cursor: pointer;
     color: var(--text-main);
     background:
-        linear-gradient(150deg, rgba(77, 215, 196, 0.16), rgba(82, 147, 255, 0.08) 55%, rgba(255, 207, 107, 0.12)),
-        rgba(18, 30, 50, 0.9);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 10px 24px rgba(0, 0, 0, 0.35);
+        radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 45%),
+        radial-gradient(circle at 70% 78%, rgba(6, 12, 22, 0.5), rgba(6, 12, 22, 0) 50%),
+        linear-gradient(145deg, rgba(93, 230, 213, 0.4), rgba(72, 126, 255, 0.2) 52%, rgba(255, 207, 107, 0.24));
+    box-shadow:
+        inset 10px 10px 20px rgba(8, 13, 24, 0.55),
+        inset -9px -9px 16px rgba(161, 216, 255, 0.12),
+        0 14px 28px rgba(0, 0, 0, 0.44),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     display: grid;
+    place-items: center;
     align-content: center;
-    justify-items: center;
-    gap: 8px;
+    gap: 10px;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
 }
 
 .exercise-btn:hover {
-    transform: translateY(-4px) scale(1.01);
-    border-color: rgba(77, 215, 196, 0.8);
-    box-shadow: 0 16px 28px rgba(0, 0, 0, 0.42), 0 0 22px rgba(77, 215, 196, 0.23);
+    transform: translateY(-4px) scale(1.02);
+    border-color: rgba(153, 241, 232, 0.9);
+    box-shadow:
+        inset 11px 11px 22px rgba(8, 13, 24, 0.58),
+        inset -10px -10px 18px rgba(182, 236, 255, 0.16),
+        0 18px 34px rgba(0, 0, 0, 0.48),
+        0 0 24px rgba(77, 215, 196, 0.28);
 }
 
 .exercise-btn:active {
-    transform: translateY(-1px);
+    transform: translateY(0) scale(0.985);
+    box-shadow:
+        inset 8px 8px 15px rgba(8, 13, 24, 0.6),
+        inset -6px -6px 10px rgba(185, 236, 255, 0.1),
+        0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
 .exercise-btn:focus-visible {
@@ -135,15 +153,21 @@ h1 {
 }
 
 .exercise-btn .icon {
-    font-size: 46px;
+    font-size: clamp(42px, 6vw, 56px);
     line-height: 1;
+    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45));
 }
 
 .exercise-btn .label {
-    color: var(--accent-warm);
+    display: block;
+    color: #f7e1a4;
     font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 0.02em;
+    font-size: 20px;
+    letter-spacing: 0.01em;
+    text-align: center;
+    line-height: 1.2;
+    max-width: 78%;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
 .micro-note {
@@ -220,29 +244,33 @@ h1 {
 
     .button-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 14px;
     }
 
     .exercise-btn {
+        width: clamp(122px, 40vw, 156px);
         min-height: 0;
         aspect-ratio: 1;
-        border-radius: 18px;
-        gap: 6px;
-        padding: 8px 6px;
+        border-radius: 50%;
+        padding: 0;
+        gap: 7px;
         background:
-            linear-gradient(160deg, rgba(77, 215, 196, 0.18), rgba(82, 147, 255, 0.09) 60%, rgba(255, 207, 107, 0.14)),
-            rgba(16, 27, 44, 0.95);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.11), 0 8px 18px rgba(0, 0, 0, 0.32);
+            radial-gradient(circle at 27% 20%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 45%),
+            radial-gradient(circle at 74% 79%, rgba(4, 10, 20, 0.55), rgba(4, 10, 20, 0) 52%),
+            linear-gradient(145deg, rgba(102, 237, 219, 0.42), rgba(76, 138, 255, 0.25) 52%, rgba(255, 207, 107, 0.26));
+        box-shadow:
+            inset 8px 8px 16px rgba(7, 11, 21, 0.58),
+            inset -8px -8px 14px rgba(178, 233, 255, 0.13),
+            0 10px 20px rgba(0, 0, 0, 0.4);
     }
 
     .exercise-btn .icon {
-        font-size: clamp(30px, 8vw, 38px);
+        font-size: clamp(34px, 10vw, 46px);
     }
 
     .exercise-btn .label {
-        font-size: 12px;
-        line-height: 1.25;
-        text-wrap: balance;
+        font-size: clamp(0px, 2.9vw, 12px);
+        max-width: 84%;
     }
 
     .micro-note {
@@ -253,11 +281,12 @@ h1 {
 
 @media (max-width: 360px) {
     .button-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
     }
 
     .exercise-btn {
-        aspect-ratio: auto;
-        min-height: 112px;
+        width: min(42vw, 138px);
+        aspect-ratio: 1;
     }
 }
