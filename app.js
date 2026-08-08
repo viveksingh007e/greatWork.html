@@ -12,6 +12,7 @@ const runTracking = {
 
 let runRouteMap = null;
 let runRouteLayer = null;
+let runRouteTileLayer = null;
 let isRouteMapFallbackFullscreen = false;
 
 let hindiVoice = null;
@@ -90,6 +91,17 @@ function parseStoredRoute() {
     }
 }
 
+function attachMapTilesIfOnline() {
+    if (!runRouteMap || runRouteTileLayer || !navigator.onLine || !window.L) {
+        return;
+    }
+
+    runRouteTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(runRouteMap);
+}
+
 function renderRunRouteMap(routePoints) {
     if (!window.L) {
         setRouteVisibility(false);
@@ -119,10 +131,9 @@ function renderRunRouteMap(routePoints) {
             attributionControl: true
         });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(runRouteMap);
+        attachMapTilesIfOnline();
+    } else {
+        attachMapTilesIfOnline();
     }
 
     if (runRouteLayer) {
@@ -489,3 +500,16 @@ function startRun() {
 
 initializeRouteMapInteractions();
 renderStoredRunDistance();
+
+window.addEventListener('online', () => {
+    attachMapTilesIfOnline();
+    invalidateRouteMapSizeSoon();
+});
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(error => {
+            console.error('Service worker registration failed:', error);
+        });
+    });
+}
