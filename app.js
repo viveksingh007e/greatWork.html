@@ -12,6 +12,7 @@ const runTracking = {
 
 let runRouteMap = null;
 let runRouteLayer = null;
+let isRouteMapFallbackFullscreen = false;
 
 let hindiVoice = null;
 
@@ -163,6 +164,100 @@ function renderRunRouteMap(routePoints) {
             runRouteMap.invalidateSize();
         }
     }, 0);
+}
+
+function invalidateRouteMapSizeSoon() {
+    setTimeout(() => {
+        if (runRouteMap) {
+            runRouteMap.invalidateSize();
+        }
+    }, 60);
+}
+
+function setRouteMapFallbackFullscreen(isFullscreen) {
+    const mapElement = document.getElementById('runRouteMap');
+    const closeButton = document.getElementById('runRouteMapClose');
+    if (!mapElement || !closeButton) {
+        return;
+    }
+
+    isRouteMapFallbackFullscreen = isFullscreen;
+    mapElement.classList.toggle('is-fallback-fullscreen', isFullscreen);
+    closeButton.classList.toggle('is-visible', isFullscreen);
+    document.body.classList.toggle('route-map-overlay-open', isFullscreen);
+    invalidateRouteMapSizeSoon();
+}
+
+function openRouteMapFullscreen() {
+    const mapElement = document.getElementById('runRouteMap');
+    const closeButton = document.getElementById('runRouteMapClose');
+    if (!mapElement || !closeButton) {
+        return;
+    }
+
+    closeButton.classList.add('is-visible');
+
+    if (mapElement.requestFullscreen) {
+        mapElement.requestFullscreen()
+            .then(() => invalidateRouteMapSizeSoon())
+            .catch(() => setRouteMapFallbackFullscreen(true));
+        return;
+    }
+
+    setRouteMapFallbackFullscreen(true);
+}
+
+function closeRouteMapFullscreen() {
+    const mapElement = document.getElementById('runRouteMap');
+    const closeButton = document.getElementById('runRouteMapClose');
+    if (!mapElement || !closeButton) {
+        return;
+    }
+
+    const isNativeFullscreen = document.fullscreenElement === mapElement;
+
+    if (isNativeFullscreen && document.exitFullscreen) {
+        document.exitFullscreen().finally(() => {
+            closeButton.classList.remove('is-visible');
+            invalidateRouteMapSizeSoon();
+        });
+        return;
+    }
+
+    if (isRouteMapFallbackFullscreen) {
+        setRouteMapFallbackFullscreen(false);
+    }
+
+    closeButton.classList.remove('is-visible');
+}
+
+function initializeRouteMapInteractions() {
+    const mapElement = document.getElementById('runRouteMap');
+    const closeButton = document.getElementById('runRouteMapClose');
+    if (!mapElement || !closeButton) {
+        return;
+    }
+
+    mapElement.addEventListener('click', () => {
+        const isNativeFullscreen = document.fullscreenElement === mapElement;
+        if (!isNativeFullscreen && !isRouteMapFallbackFullscreen) {
+            openRouteMapFullscreen();
+        }
+    });
+
+    closeButton.addEventListener('click', event => {
+        event.stopPropagation();
+        closeRouteMapFullscreen();
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+        const isNativeFullscreen = document.fullscreenElement === mapElement;
+        closeButton.classList.toggle('is-visible', isNativeFullscreen || isRouteMapFallbackFullscreen);
+        if (!isNativeFullscreen) {
+            document.body.classList.remove('route-map-overlay-open');
+        }
+        invalidateRouteMapSizeSoon();
+    });
 }
 
 function renderStoredRunDistance() {
@@ -392,4 +487,5 @@ function startRun() {
     });
 }
 
+initializeRouteMapInteractions();
 renderStoredRunDistance();

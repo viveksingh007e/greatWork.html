@@ -160,6 +160,61 @@ h1 {
     border-radius: 10px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.14);
+    cursor: zoom-in;
+}
+
+.run-route-map:-webkit-full-screen,
+.run-route-map:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+    cursor: grab;
+}
+
+.run-route-map.is-fallback-fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1200;
+    border-radius: 0;
+    border: none;
+    cursor: grab;
+}
+
+body.route-map-overlay-open {
+    overflow: hidden;
+}
+
+.route-map-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 1300;
+    border: 1px solid rgba(255, 255, 255, 0.44);
+    background: rgba(11, 19, 31, 0.86);
+    color: #f2f7ff;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    display: none;
+}
+
+.route-map-close.is-visible {
+    display: inline-block;
+}
+
+.route-map-close:hover {
+    border-color: rgba(168, 244, 235, 0.9);
+}
+
+.route-map-close:focus-visible {
+    outline: 2px solid rgba(168, 244, 235, 0.9);
+    outline-offset: 1px;
 }
 
 .exercise-btn {
@@ -327,6 +382,12 @@ h1 {
 
     .run-route-map {
         height: clamp(180px, 52vw, 220px);
+    }
+
+    .route-map-close {
+        top: 12px;
+        right: 12px;
+        padding: 7px 11px;
     }
 
     .exercise-btn {
