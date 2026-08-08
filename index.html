@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wellness Timer</title>
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    >
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -35,12 +41,21 @@
             <p class="run-distance-title">Run Distance</p>
             <p class="run-distance-value" id="runDistanceValue">No run data yet</p>
             <p class="run-distance-subtext" id="runDistanceSubtext">Tap Run to start GPS tracking.</p>
+            <div class="run-route-map-wrap is-hidden" id="runRouteMapWrap">
+                <p class="run-route-title">Route Covered</p>
+                <div class="run-route-map" id="runRouteMap" role="img" aria-label="Map of route covered during completed run"></div>
+            </div>
         </section>
     </main>
 
     <p class="micro-note">Tip: keep your volume on for guided voice prompts.</p>
 
     <script src="https://unpkg.com/nosleep.js@0.12.0/dist/NoSleep.min.js"></script>
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
     <script src="app.js"></script>
 </body>
 </html>

@@ -1,12 +1,17 @@
 const noSleep = new NoSleep();
 const DISTANCE_STORAGE_KEY = 'wellnessTimer.lastRunDistanceMeters';
+const ROUTE_STORAGE_KEY = 'wellnessTimer.lastRunRoute';
 
 const runTracking = {
     watchId: null,
     lastPosition: null,
     totalMeters: 0,
-    isTracking: false
+    isTracking: false,
+    routePoints: []
 };
+
+let runRouteMap = null;
+let runRouteLayer = null;
 
 let hindiVoice = null;
 
@@ -54,14 +59,124 @@ function updateRunDistanceUI(valueText, subText) {
     }
 }
 
+function setRouteVisibility(isVisible) {
+    const routeWrap = document.getElementById('runRouteMapWrap');
+    if (!routeWrap) {
+        return;
+    }
+
+    routeWrap.classList.toggle('is-hidden', !isVisible);
+}
+
+function parseStoredRoute() {
+    try {
+        const stored = localStorage.getItem(ROUTE_STORAGE_KEY);
+        if (!stored) {
+            return [];
+        }
+
+        const parsed = JSON.parse(stored);
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+
+        return parsed.filter(point => {
+            return point && Number.isFinite(point.lat) && Number.isFinite(point.lng);
+        });
+    } catch (error) {
+        console.error('Failed to parse stored run route:', error);
+        return [];
+    }
+}
+
+function renderRunRouteMap(routePoints) {
+    if (!window.L) {
+        setRouteVisibility(false);
+        return;
+    }
+
+    const mapElement = document.getElementById('runRouteMap');
+    if (!mapElement) {
+        return;
+    }
+
+    if (!Array.isArray(routePoints) || routePoints.length < 2) {
+        setRouteVisibility(false);
+        if (runRouteMap) {
+            runRouteMap.remove();
+            runRouteMap = null;
+            runRouteLayer = null;
+        }
+        return;
+    }
+
+    setRouteVisibility(true);
+
+    if (!runRouteMap) {
+        runRouteMap = L.map(mapElement, {
+            zoomControl: false,
+            attributionControl: true
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(runRouteMap);
+    }
+
+    if (runRouteLayer) {
+        runRouteLayer.remove();
+    }
+
+    const latLngs = routePoints.map(point => [point.lat, point.lng]);
+    runRouteLayer = L.layerGroup();
+
+    const routePath = L.polyline(latLngs, {
+        color: '#4dd7c4',
+        weight: 5,
+        opacity: 0.9,
+        lineCap: 'round',
+        lineJoin: 'round'
+    }).addTo(runRouteLayer);
+
+    L.circleMarker(latLngs[0], {
+        radius: 6,
+        color: '#f6fbff',
+        fillColor: '#5af2e0',
+        fillOpacity: 0.9,
+        weight: 2
+    }).addTo(runRouteLayer);
+
+    L.circleMarker(latLngs[latLngs.length - 1], {
+        radius: 6,
+        color: '#f6fbff',
+        fillColor: '#ffcf6b',
+        fillOpacity: 0.9,
+        weight: 2
+    }).addTo(runRouteLayer);
+
+    runRouteLayer.addTo(runRouteMap);
+    runRouteMap.fitBounds(routePath.getBounds(), { padding: [20, 20] });
+
+    setTimeout(() => {
+        if (runRouteMap) {
+            runRouteMap.invalidateSize();
+        }
+    }, 0);
+}
+
 function renderStoredRunDistance() {
     const storedMeters = Number.parseFloat(localStorage.getItem(DISTANCE_STORAGE_KEY));
+    const storedRoute = parseStoredRoute();
+
     if (Number.isFinite(storedMeters) && storedMeters > 0) {
         updateRunDistanceUI(formatDistance(storedMeters), 'Last completed run distance.');
+        renderRunRouteMap(storedRoute);
         return;
     }
 
     updateRunDistanceUI('No run data yet', 'Tap Run to start GPS tracking.');
+    setRouteVisibility(false);
 }
 
 function onRunPositionUpdate(position) {
@@ -82,6 +197,16 @@ function onRunPositionUpdate(position) {
     }
 
     runTracking.lastPosition = position;
+
+    const latestPoint = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+    };
+    const previousPoint = runTracking.routePoints[runTracking.routePoints.length - 1];
+    if (!previousPoint || previousPoint.lat !== latestPoint.lat || previousPoint.lng !== latestPoint.lng) {
+        runTracking.routePoints.push(latestPoint);
+    }
+
     updateRunDistanceUI(formatDistance(runTracking.totalMeters), 'GPS tracking active while run session is in progress.');
 }
 
@@ -108,8 +233,10 @@ function startRunDistanceTracking() {
     runTracking.lastPosition = null;
     runTracking.totalMeters = 0;
     runTracking.isTracking = true;
+    runTracking.routePoints = [];
 
     updateRunDistanceUI('0 m', 'Waiting for GPS lock...');
+    setRouteVisibility(false);
 
     runTracking.watchId = navigator.geolocation.watchPosition(
         onRunPositionUpdate,
@@ -131,7 +258,10 @@ function stopRunDistanceTracking() {
     runTracking.lastPosition = null;
     runTracking.isTracking = false;
 
-    return runTracking.totalMeters;
+    return {
+        totalMeters: runTracking.totalMeters,
+        routePoints: [...runTracking.routePoints]
+    };
 }
 
 function finalizeRunDistanceTracking() {
@@ -139,9 +269,11 @@ function finalizeRunDistanceTracking() {
         return;
     }
 
-    const totalMeters = stopRunDistanceTracking();
+    const { totalMeters, routePoints } = stopRunDistanceTracking();
     localStorage.setItem(DISTANCE_STORAGE_KEY, String(totalMeters));
-    updateRunDistanceUI(formatDistance(totalMeters), 'Run completed. Distance saved on homepage.');
+    localStorage.setItem(ROUTE_STORAGE_KEY, JSON.stringify(routePoints));
+    updateRunDistanceUI(formatDistance(totalMeters), 'Run completed. Distance and route saved on homepage.');
+    renderRunRouteMap(routePoints);
 }
 
 function loadVoices() {
@@ -241,8 +373,8 @@ function startYog() {
 function startRun() {
     runExercise([
 
-        ['जीवन जीने के लिए है, और हम जीने का मज़ा लेने आए हैं। हम आज चालीस मिनट तक दौड़ेंगे, यह एक बड़ी उपलब्धि होगी। हम ३० सेकंड में शुरू करेंगे।', 45],
-        ['शुभकामनाएँ! आइए, आरंभ करते हैं!', 60],
+        ['जीवन जीने के लिए है, और हम जीने का मज़ा लेने आए हैं। हम आज चालीस मिनट तक दौड़ेंगे, यह एक बड़ी उपलब्धि होगी। हम ३० सेकंड में शुरू करेंगे।', 15],
+        /*['शुभकामनाएँ! आइए, आरंभ करते हैं!', 60],
         ['टाइमर चल रहा है, निश्चिंत रहें। उनतालीस मिनट और हैं।', 780],
         ['बहुत बढ़िया! अब छब्बीस मिनट शेष हैं। अपनी गति बनाए रखें।', 300],
         ['अब इक्कीस मिनट और हैं।', 720],
@@ -252,7 +384,7 @@ function startRun() {
         ['अब सिर्फ तीन मिनट शेष हैं!', 60],
         ['अब सिर्फ दो मिनट शेष हैं!', 60],
         ['अंतिम एक मिनट शेष है!', 60],
-        ['शानदार! दौड़ अब पूरी हो गई है। अपनी उपलब्धियों में इसे दर्ज करें।', 0]
+        ['शानदार! दौड़ अब पूरी हो गई है। अपनी उपलब्धियों में इसे दर्ज करें।', 0]*/
 
     ], {
         onStart: startRunDistanceTracking,

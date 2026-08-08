@@ -133,6 +133,35 @@ h1 {
     font-size: 13px;
 }
 
+.run-route-map-wrap {
+    margin-top: 14px;
+    border-radius: 12px;
+    padding: 10px;
+    background: rgba(11, 19, 31, 0.66);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.run-route-map-wrap.is-hidden {
+    display: none;
+}
+
+.run-route-title {
+    margin: 0 0 8px;
+    color: #d4e4ff;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.run-route-map {
+    width: 100%;
+    height: clamp(190px, 36vw, 260px);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
 .exercise-btn {
     width: clamp(130px, 19vw, 170px);
     aspect-ratio: 1;
@@ -289,6 +318,15 @@ h1 {
 
     .run-distance-subtext {
         font-size: 12px;
+    }
+
+    .run-route-map-wrap {
+        margin-top: 12px;
+        padding: 8px;
+    }
+
+    .run-route-map {
+        height: clamp(180px, 52vw, 220px);
     }
 
     .exercise-btn {
