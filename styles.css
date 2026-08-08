@@ -103,6 +103,36 @@ h1 {
     justify-items: center;
 }
 
+.run-distance-panel {
+    margin-top: 22px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: linear-gradient(140deg, rgba(19, 30, 48, 0.72), rgba(14, 24, 38, 0.5));
+}
+
+.run-distance-title {
+    margin: 0;
+    color: var(--accent);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.run-distance-value {
+    margin: 8px 0 4px;
+    font-size: clamp(19px, 3.3vw, 28px);
+    font-weight: 800;
+    color: #f6fbff;
+}
+
+.run-distance-subtext {
+    margin: 0;
+    color: var(--text-soft);
+    font-size: 13px;
+}
+
 .exercise-btn {
     width: clamp(130px, 19vw, 170px);
     aspect-ratio: 1;
@@ -245,6 +275,20 @@ h1 {
     .button-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
+    }
+
+    .run-distance-panel {
+        margin-top: 16px;
+        padding: 12px;
+    }
+
+    .run-distance-value {
+        margin-top: 6px;
+        font-size: clamp(18px, 5.8vw, 24px);
+    }
+
+    .run-distance-subtext {
+        font-size: 12px;
     }
 
     .exercise-btn {

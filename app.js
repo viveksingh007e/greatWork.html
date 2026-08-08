@@ -1,6 +1,148 @@
 const noSleep = new NoSleep();
+const DISTANCE_STORAGE_KEY = 'wellnessTimer.lastRunDistanceMeters';
+
+const runTracking = {
+    watchId: null,
+    lastPosition: null,
+    totalMeters: 0,
+    isTracking: false
+};
 
 let hindiVoice = null;
+
+function toRadians(value) {
+    return value * (Math.PI / 180);
+}
+
+function calculateDistanceMeters(fromPos, toPos) {
+    const earthRadiusMeters = 6371000;
+    const lat1 = toRadians(fromPos.coords.latitude);
+    const lat2 = toRadians(toPos.coords.latitude);
+    const deltaLat = toRadians(toPos.coords.latitude - fromPos.coords.latitude);
+    const deltaLon = toRadians(toPos.coords.longitude - fromPos.coords.longitude);
+
+    const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
+        + Math.cos(lat1) * Math.cos(lat2)
+        * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return earthRadiusMeters * c;
+}
+
+function formatDistance(meters) {
+    const roundedMeters = Math.max(0, Math.round(meters || 0));
+    const kilometers = Math.floor(roundedMeters / 1000);
+    const remainingMeters = roundedMeters % 1000;
+
+    if (kilometers > 0) {
+        return `${kilometers} km ${remainingMeters} m`;
+    }
+
+    return `${roundedMeters} m`;
+}
+
+function updateRunDistanceUI(valueText, subText) {
+    const valueEl = document.getElementById('runDistanceValue');
+    const subTextEl = document.getElementById('runDistanceSubtext');
+
+    if (valueEl) {
+        valueEl.textContent = valueText;
+    }
+
+    if (subTextEl) {
+        subTextEl.textContent = subText;
+    }
+}
+
+function renderStoredRunDistance() {
+    const storedMeters = Number.parseFloat(localStorage.getItem(DISTANCE_STORAGE_KEY));
+    if (Number.isFinite(storedMeters) && storedMeters > 0) {
+        updateRunDistanceUI(formatDistance(storedMeters), 'Last completed run distance.');
+        return;
+    }
+
+    updateRunDistanceUI('No run data yet', 'Tap Run to start GPS tracking.');
+}
+
+function onRunPositionUpdate(position) {
+    const accuracy = position.coords.accuracy || 0;
+    if (accuracy > 80) {
+        return;
+    }
+
+    if (runTracking.lastPosition) {
+        const meters = calculateDistanceMeters(runTracking.lastPosition, position);
+        const elapsedSeconds = (position.timestamp - runTracking.lastPosition.timestamp) / 1000;
+        const speedMps = elapsedSeconds > 0 ? meters / elapsedSeconds : 0;
+
+        // Filter jumps caused by weak GPS signal.
+        if (meters < 120 && speedMps <= 8.5) {
+            runTracking.totalMeters += meters;
+        }
+    }
+
+    runTracking.lastPosition = position;
+    updateRunDistanceUI(formatDistance(runTracking.totalMeters), 'GPS tracking active while run session is in progress.');
+}
+
+function onRunPositionError(error) {
+    if (error.code === error.PERMISSION_DENIED) {
+        stopRunDistanceTracking();
+        alert('GPS permission is required to track run distance. Please allow location access.');
+        updateRunDistanceUI('GPS permission denied', 'Allow location permission and start Run again.');
+    } else {
+        updateRunDistanceUI(formatDistance(runTracking.totalMeters), 'GPS signal issue detected. Tracking will continue when signal improves.');
+    }
+}
+
+function startRunDistanceTracking() {
+    if (!navigator.geolocation) {
+        throw new Error('Geolocation is not supported on this device/browser.');
+    }
+
+    if (runTracking.watchId !== null) {
+        navigator.geolocation.clearWatch(runTracking.watchId);
+    }
+
+    runTracking.watchId = null;
+    runTracking.lastPosition = null;
+    runTracking.totalMeters = 0;
+    runTracking.isTracking = true;
+
+    updateRunDistanceUI('0 m', 'Waiting for GPS lock...');
+
+    runTracking.watchId = navigator.geolocation.watchPosition(
+        onRunPositionUpdate,
+        onRunPositionError,
+        {
+            enableHighAccuracy: true,
+            maximumAge: 1000,
+            timeout: 10000
+        }
+    );
+}
+
+function stopRunDistanceTracking() {
+    if (runTracking.watchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(runTracking.watchId);
+    }
+
+    runTracking.watchId = null;
+    runTracking.lastPosition = null;
+    runTracking.isTracking = false;
+
+    return runTracking.totalMeters;
+}
+
+function finalizeRunDistanceTracking() {
+    if (!runTracking.isTracking) {
+        return;
+    }
+
+    const totalMeters = stopRunDistanceTracking();
+    localStorage.setItem(DISTANCE_STORAGE_KEY, String(totalMeters));
+    updateRunDistanceUI(formatDistance(totalMeters), 'Run completed. Distance saved on homepage.');
+}
 
 function loadVoices() {
     const voices = speechSynthesis.getVoices();
@@ -26,8 +168,11 @@ function speakAndWait(text, waitSeconds) {
     });
 }
 
-async function runExercise(routine) {
+async function runExercise(routine, hooks = {}) {
     try {
+        if (hooks.onStart) {
+            await hooks.onStart();
+        }
         await noSleep.enable();
         for (const [text, wait] of routine) {
             await speakAndWait(text, wait);
@@ -37,6 +182,9 @@ async function runExercise(routine) {
         alert('Error starting exercise: ' + error.message);
     } finally {
         noSleep.disable();
+        if (hooks.onComplete) {
+            await hooks.onComplete();
+        }
     }
 }
 
@@ -74,7 +222,8 @@ function startBellyExercise() {
 function startYog() {
     runExercise([
 
-        ['स्वागत है! हम अब योग शुरू करेंगे। यह केवल नौ मिनट का होगा। सही स्थिति में आने के लिए अपना समय लें। हम दस सेकंड में शुरू करेंगे', 20], 
+        ['स्वागत है! हम अब योग शुरू करेंगे। यह केवल नौ मिनट का होगा। सही स्थिति में आने के लिए अपना समय लें। हम दस सेकंड में शुरू करेंगे', 3], 
+        
         ['आइए पाँच मिनट के लिए कपालभाति प्राणायाम शुरू करें। अभी शुरू करते हैं!', 125],
         ['बहुत बढ़िया! अब दस सेकंड के लिए आराम करें', 12],
         ['अगले तीन मिनट तक जारी रखें', 125],
@@ -84,6 +233,7 @@ function startYog() {
         ['बहुत बढ़िया! अनुलोम विलोम प्राणायाम अब पूरा हो गया है। आराम करें!', 20],
         ['आइए दो मिनट के लिए बालायाम शुरू करें। अभी शुरू करते हैं!', 125],
         ['शानदार! हमने योग पूरा कर लिया है। फिर मिलेंगे!', 0]
+        
 
     ]);
 }
@@ -91,9 +241,9 @@ function startYog() {
 function startRun() {
     runExercise([
 
-        ['जीवन जीने के लिए है, और हम जीने का मज़ा लेने आए हैं। हम आज पैंतीस मिनट तक दौड़ेंगे, यह एक बड़ी उपलब्धि होगी। हम ३० सेकंड में शुरू करेंगे।', 45],
-        
-        ['शुभकामनाएँ! आइए, आरंभ करते हैं!', 60],
+        ['जीवन जीने के लिए है, और हम जीने का मज़ा लेने आए हैं। हम आज पैंतीस मिनट तक दौड़ेंगे, यह एक बड़ी उपलब्धि होगी। हम ३० सेकंड में शुरू करेंगे।', 15],
+
+        /*['शुभकामनाएँ! आइए, आरंभ करते हैं!', 60],
         
         ['टाइमर चल रहा है, निश्चिंत रहें। चौंतीस मिनट और हैं।', 780],
 
@@ -111,7 +261,12 @@ function startRun() {
         
         ['अंतिम एक मिनट शेष है!', 60],
         
-        ['शानदार! दौड़ अब पूरी हो गई है। अपनी उपलब्धियों में इसे दर्ज करें।', 0]
+        ['शानदार! दौड़ अब पूरी हो गई है। अपनी उपलब्धियों में इसे दर्ज करें।', 0]*/
 
-    ]);
+    ], {
+        onStart: startRunDistanceTracking,
+        onComplete: finalizeRunDistanceTracking
+    });
 }
+
+renderStoredRunDistance();
