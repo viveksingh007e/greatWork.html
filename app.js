@@ -12,7 +12,6 @@ const runTracking = {
 
 let runRouteMap = null;
 let runRouteLayer = null;
-let runRouteTileLayer = null;
 let isRouteMapFallbackFullscreen = false;
 
 let hindiVoice = null;
@@ -91,17 +90,6 @@ function parseStoredRoute() {
     }
 }
 
-function attachMapTilesIfOnline() {
-    if (!runRouteMap || runRouteTileLayer || !navigator.onLine || !window.L) {
-        return;
-    }
-
-    runRouteTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(runRouteMap);
-}
-
 function renderRunRouteMap(routePoints) {
     if (!window.L) {
         setRouteVisibility(false);
@@ -131,9 +119,10 @@ function renderRunRouteMap(routePoints) {
             attributionControl: true
         });
 
-        attachMapTilesIfOnline();
-    } else {
-        attachMapTilesIfOnline();
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(runRouteMap);
     }
 
     if (runRouteLayer) {
@@ -479,7 +468,7 @@ function startYog() {
 function startRun() {
     runExercise([
 
-        ['जीवन जीने के लिए है, और हम जीने का मज़ा लेने आए हैं। हम आज चालीस मिनट तक दौड़ेंगे, यह एक बड़ी उपलब्धि होगी। हम ३० सेकंड में शुरू करेंगे।', 15],
+        ['जीवन जीने के लिए है, और हम जीने का मज़ा लेने आए हैं। हम आज चालीस मिनट तक दौड़ेंगे, यह एक बड़ी उपलब्धि होगी। हम ३० सेकंड में शुरू करेंगे।', 45],
         ['शुभकामनाएँ! आइए, आरंभ करते हैं!', 60],
         ['टाइमर चल रहा है, निश्चिंत रहें। उनतालीस मिनट और हैं।', 780],
         ['बहुत बढ़िया! अब छब्बीस मिनट शेष हैं। अपनी गति बनाए रखें।', 300],
@@ -500,16 +489,3 @@ function startRun() {
 
 initializeRouteMapInteractions();
 renderStoredRunDistance();
-
-window.addEventListener('online', () => {
-    attachMapTilesIfOnline();
-    invalidateRouteMapSizeSoon();
-});
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(error => {
-            console.error('Service worker registration failed:', error);
-        });
-    });
-}
